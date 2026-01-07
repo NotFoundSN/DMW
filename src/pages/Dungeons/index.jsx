@@ -1,12 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { dungeonsData } from "../../const/dungeonsData";
+import dataService from "../../services/dataService";
 
 export default function Dungeons() {
-    const [selectedDungeon, setSelectedDungeon] = useState(0);
+    const [selectedDungeonId, setSelectedDungeonId] = useState(null);
     const [selectedVariant, setSelectedVariant] = useState(0);
+    const [allDungeonsData, setAllDungeonsData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [useFallback, setUseFallback] = useState(false);
 
-    // Si no hay dungeons, mostrar mensaje
-    if (!dungeonsData || dungeonsData.length === 0) {
+    // Cargar TODOS los datos de dungeons de una sola vez
+    useEffect(() => {
+        const loadAllDungeons = async () => {
+            setLoading(true);
+            setError(null);
+
+            const result = await dataService.getDungeonsList();
+
+            if (result.success && result.data && result.data.length > 0) {
+                setAllDungeonsData(result.data);
+                setSelectedDungeonId(result.data[0].id); // Seleccionar el primero por defecto
+                setUseFallback(false);
+            } else {
+                // Fallback a datos locales si falla la API
+                console.warn("Usando datos locales como fallback");
+                setAllDungeonsData(dungeonsData);
+                if (dungeonsData.length > 0) {
+                    setSelectedDungeonId(dungeonsData[0].id);
+                }
+                setUseFallback(true);
+                setError("No se pudieron cargar los datos del servidor. Mostrando datos locales.");
+            }
+
+            setLoading(false);
+        };
+
+        loadAllDungeons();
+    }, []);
+
+    // Obtener el dungeon actual seleccionado
+    const currentDungeon = allDungeonsData.find(dungeon => dungeon.id === selectedDungeonId);
+
+    // Si está cargando
+    if (loading) {
+        return (
+            <div className="w-full max-w-2xl mx-auto px-4 py-6 flex justify-center items-center min-h-screen">
+                <div className="bg-purple bg-opacity-95 rounded-lg p-8 shadow-2xl border-2 border-blue">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-light mx-auto mb-4"></div>
+                        <p className="text-white text-xl font-bold">Cargando datos...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Si no hay dungeons
+    if (!currentDungeon || allDungeonsData.length === 0) {
         return (
             <div className="w-full max-w-2xl mx-auto px-4 py-6">
                 <div className="bg-purple bg-opacity-95 rounded-lg p-8 shadow-2xl border-2 border-blue text-center">
@@ -17,23 +68,22 @@ export default function Dungeons() {
                         No hay dungeons disponibles aún.
                     </p>
                     <p className="text-blue-light text-md mt-2">
-                        Agrega datos de dungeons en <code className="bg-purple-dark px-2 py-1 rounded">src/const/dungeonsData.js</code>
+                        Agrega datos de dungeons en el servidor
                     </p>
                 </div>
             </div>
         );
     }
 
-    const currentDungeon = dungeonsData[selectedDungeon];
     const currentVariant = currentDungeon.variants[selectedVariant];
 
     const handleDungeonChange = (e) => {
-        setSelectedDungeon(parseInt(e.target.value));
+        setSelectedDungeonId(e.target.value);
         setSelectedVariant(0); // Reset variant when changing dungeon
     };
 
-    const handleVariantChange = (e) => {
-        setSelectedVariant(parseInt(e.target.value));
+    const handleVariantChange = (index) => {
+        setSelectedVariant(index);
     };
 
     return (
@@ -44,17 +94,26 @@ export default function Dungeons() {
                     Seleccionar Dungeon:
                 </label>
                 <select
-                    value={selectedDungeon}
+                    value={selectedDungeonId}
                     onChange={handleDungeonChange}
                     className="w-full bg-purple-light text-white font-bold text-lg p-3 rounded-md border-2 border-blue"
                 >
-                    {dungeonsData.map((dungeon, index) => (
-                        <option key={index} value={index}>
+                    {allDungeonsData.map((dungeon) => (
+                        <option key={dungeon.id} value={dungeon.id}>
                             {dungeon.name}
                         </option>
                     ))}
                 </select>
             </div>
+
+            {/* Fallback Warning */}
+            {useFallback && (
+                <div className="bg-yellow-600 bg-opacity-90 rounded-lg p-3 shadow-lg border-2 border-yellow-400">
+                    <p className="text-white text-sm">
+                        ⚠️ {error}
+                    </p>
+                </div>
+            )}
 
             {/* Difficulty Variant Selector */}
             <div className="bg-purple-dark bg-opacity-90 rounded-lg p-4 shadow-lg">
@@ -65,10 +124,10 @@ export default function Dungeons() {
                     {currentDungeon.variants.map((variant, index) => (
                         <button
                             key={index}
-                            onClick={() => setSelectedVariant(index)}
+                            onClick={() => handleVariantChange(index)}
                             className={`px-6 py-3 rounded-lg font-bold text-lg transition-all border-2 ${selectedVariant === index
-                                    ? "bg-blue text-white border-white shadow-lg scale-105"
-                                    : "bg-purple-dark text-blue-light border-purple-light hover:bg-purple hover:border-blue"
+                                ? "bg-blue text-white border-white shadow-lg scale-105"
+                                : "bg-purple-dark text-blue-light border-purple-light hover:bg-purple hover:border-blue"
                                 }`}
                         >
                             {variant.difficulty}

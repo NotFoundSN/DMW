@@ -4,51 +4,33 @@ import dataService from "../../services/dataService";
 
 export default function Arena() {
 	const [currentFloor, setCurrentFloor] = useState(0);
-	const [selectedArena, setSelectedArena] = useState("colo-hero");
-	const [arenaData, setArenaData] = useState(null);
-	const [availableArenas, setAvailableArenas] = useState([]);
+	const [selectedArenaId, setSelectedArenaId] = useState("colo-hero");
+	const [allArenasData, setAllArenasData] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [useFallback, setUseFallback] = useState(false);
 
-	// Cargar lista de arenas disponibles desde PHP
+	// Cargar TODOS los datos de arenas de una sola vez
 	useEffect(() => {
-		const loadArenasList = async () => {
-			const result = await dataService.getArenasList();
-
-			if (result.success) {
-				setAvailableArenas(result.data);
-			} else {
-				// Fallback: solo Colo Hero
-				console.warn("No se pudo cargar la lista de arenas, usando fallback");
-				setAvailableArenas([
-					{ id: "colo-hero", name: "Colo Hero", description: "Colosseum Hero" }
-				]);
-			}
-		};
-
-		loadArenasList();
-	}, []);
-
-	// Cargar datos de la arena
-	useEffect(() => {
-		const loadArenaData = async () => {
+		const loadAllArenas = async () => {
 			setLoading(true);
 			setError(null);
 
-			const result = await dataService.getArenaData(selectedArena);
+			const result = await dataService.getArenasList();
 
-			if (result.success) {
-				setArenaData(result.data);
+			if (result.success && result.data && result.data.length > 0) {
+				setAllArenasData(result.data);
 				setUseFallback(false);
 			} else {
 				// Fallback a datos locales si falla la API
 				console.warn("Usando datos locales como fallback");
-				setArenaData({
+				setAllArenasData([{
+					id: "colo-hero",
+					name: "Colo Hero",
 					floors: colosseumHeroData,
 					generalNotes: generalNotes,
 					bugs: bugs
-				});
+				}]);
 				setUseFallback(true);
 				setError("No se pudieron cargar los datos del servidor. Mostrando datos locales.");
 			}
@@ -56,10 +38,13 @@ export default function Arena() {
 			setLoading(false);
 		};
 
-		loadArenaData();
-	}, [selectedArena]);
+		loadAllArenas();
+	}, []);
 
-	// Mostrar loading
+	// Obtener la arena actual seleccionada
+	const currentArenaData = allArenasData.find(arena => arena.id === selectedArenaId);
+
+	// Si no hay datos aún, mostrar loading
 	if (loading) {
 		return (
 			<div className="w-full max-w-2xl mx-auto px-4 py-6 flex justify-center items-center min-h-screen">
@@ -73,8 +58,8 @@ export default function Arena() {
 		);
 	}
 
-	// Mostrar error crítico (solo si no hay fallback)
-	if (!arenaData) {
+	// Si no hay arena seleccionada, mostrar error
+	if (!currentArenaData) {
 		return (
 			<div className="w-full max-w-2xl mx-auto px-4 py-6 flex justify-center items-center min-h-screen">
 				<div className="bg-purple bg-opacity-95 rounded-lg p-8 shadow-2xl border-2 border-red-500">
@@ -87,8 +72,8 @@ export default function Arena() {
 		);
 	}
 
-	const totalFloors = arenaData.floors.length;
-	const floorInfo = arenaData.floors[currentFloor];
+	const totalFloors = currentArenaData.floors.length;
+	const floorInfo = currentArenaData.floors[currentFloor];
 
 	// Mapeo de colores de atributos según el juego
 	const getAttributeStyle = (attribute) => {
@@ -108,21 +93,21 @@ export default function Arena() {
 		const elements = {
 			"Fuego": { emoji: "🔥", color: "#DC2626" },
 			"Fire": { emoji: "🔥", color: "#DC2626" },
-			"Luz": { emoji: "💡", color: "#CA8A04" }, // Darker yellow/gold
-			"Light": { emoji: "💡", color: "#CA8A04" }, // Darker yellow/gold
-			"Metal": { emoji: "⚙️", color: "#52525B" }, // Darker gray
-			"Steel": { emoji: "⚙️", color: "#52525B" }, // Darker gray
-			"Viento": { emoji: "💨", color: "#0284C7" }, // Darker sky blue
-			"Wind": { emoji: "💨", color: "#0284C7" }, // Darker sky blue
-			"Hielo": { emoji: "❄️", color: "#2563EB" }, // Darker blue
-			"Ice": { emoji: "❄️", color: "#2563EB" }, // Darker blue
+			"Luz": { emoji: "💡", color: "#CA8A04" },
+			"Light": { emoji: "💡", color: "#CA8A04" },
+			"Metal": { emoji: "⚙️", color: "#52525B" },
+			"Steel": { emoji: "⚙️", color: "#52525B" },
+			"Viento": { emoji: "💨", color: "#0284C7" },
+			"Wind": { emoji: "💨", color: "#0284C7" },
+			"Hielo": { emoji: "❄️", color: "#2563EB" },
+			"Ice": { emoji: "❄️", color: "#2563EB" },
 			"Neutral": { emoji: "⚪", color: "#A855F7" },
 			"Tierra": { emoji: "🪨", color: "#92400E" },
 			"Land": { emoji: "🪨", color: "#92400E" },
 			"Oscuridad": { emoji: "🌑", color: "#1F2937" },
 			"Pitch Black": { emoji: "🌑", color: "#1F2937" },
-			"Rayo": { emoji: "⚡", color: "#D97706" }, // Darker amber
-			"Thunder": { emoji: "⚡", color: "#D97706" }, // Darker amber
+			"Rayo": { emoji: "⚡", color: "#D97706" },
+			"Thunder": { emoji: "⚡", color: "#D97706" },
 			"Agua": { emoji: "💧", color: "#0EA5E9" },
 			"Water": { emoji: "💧", color: "#0EA5E9" },
 			"Madera": { emoji: "🌿", color: "#16A34A" },
@@ -147,6 +132,11 @@ export default function Arena() {
 		setCurrentFloor(parseInt(e.target.value));
 	};
 
+	const handleArenaChange = (e) => {
+		setSelectedArenaId(e.target.value);
+		setCurrentFloor(0); // Reset to first floor when changing arena
+	};
+
 	return (
 		<div className="w-full max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
 			{/* Arena Selector */}
@@ -155,17 +145,26 @@ export default function Arena() {
 					Seleccionar Arena:
 				</label>
 				<select
-					value={selectedArena}
-					onChange={(e) => setSelectedArena(e.target.value)}
+					value={selectedArenaId}
+					onChange={handleArenaChange}
 					className="w-full bg-purple-light text-white font-bold text-lg p-3 rounded-md border-2 border-blue"
 				>
-					{availableArenas.map((arena) => (
+					{allArenasData.map((arena) => (
 						<option key={arena.id} value={arena.id}>
 							{arena.name}
 						</option>
 					))}
 				</select>
 			</div>
+
+			{/* Fallback Warning */}
+			{useFallback && (
+				<div className="bg-yellow-600 bg-opacity-90 rounded-lg p-3 shadow-lg border-2 border-yellow-400">
+					<p className="text-white text-sm">
+						⚠️ {error}
+					</p>
+				</div>
+			)}
 
 			{/* Floor Card */}
 			<div className="bg-purple bg-opacity-95 rounded-lg p-6 shadow-2xl border-2 border-blue">
@@ -256,7 +255,7 @@ export default function Arena() {
 						onChange={handleFloorSelect}
 						className="w-full bg-purple-light text-white font-bold text-lg p-2 rounded-md border-2 border-blue"
 					>
-						{arenaData.floors.map((floor, index) => (
+						{currentArenaData.floors.map((floor, index) => (
 							<option key={index} value={index}>
 								Piso {floor.floor} - {floor.digimon}
 							</option>
@@ -270,7 +269,7 @@ export default function Arena() {
 				<h3 className="text-white font-bold text-xl mb-3 drop-shadow-text">
 					📝 Notas Generales
 				</h3>
-				{arenaData.generalNotes.map((note, index) => (
+				{currentArenaData.generalNotes.map((note, index) => (
 					<div key={index} className="mb-2">
 						<span className="text-blue-light font-bold">{note.title}: </span>
 						<span className="text-white">{note.desc}</span>
@@ -283,7 +282,7 @@ export default function Arena() {
 				<h3 className="text-white font-bold text-xl mb-3 drop-shadow-text">
 					🐛 Bugs Conocidos
 				</h3>
-				{arenaData.bugs.map((bug, index) => (
+				{currentArenaData.bugs.map((bug, index) => (
 					<div key={index} className="mb-2">
 						<span className="text-blue-light font-bold">{bug.title}: </span>
 						<span className="text-white">{bug.desc}</span>

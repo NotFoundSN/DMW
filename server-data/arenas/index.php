@@ -1,11 +1,11 @@
 <?php
 /**
- * API para listar arenas disponibles
- * Escanea el directorio de arenas y devuelve la lista en formato JSON
+ * API para listar arenas disponibles con su contenido completo
+ * Escanea el directorio de arenas y devuelve todos los datos en una sola respuesta
  */
 
 // Configuración CORS
-header('Access-Control-Allow-Origin: *'); // Cambia * por tu dominio específico si quieres más seguridad
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=utf-8');
@@ -26,36 +26,32 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 try {
     $arenas = [];
     $directory = __DIR__; // Directorio actual (donde están los JSON)
-    
+
     // Escanear archivos .json en el directorio
     $files = glob($directory . '/*.json');
-    
+
     foreach ($files as $file) {
         $filename = basename($file);
-        
+
         // Leer el archivo JSON
         $content = file_get_contents($file);
         $data = json_decode($content, true);
-        
-        if ($data && isset($data['id']) && isset($data['name'])) {
-            $arenas[] = [
-                'id' => $data['id'],
-                'name' => $data['name'],
-                'description' => $data['description'] ?? '',
-                'fileName' => $filename
-            ];
+
+        if ($data && isset($data['id'])) {
+            // Agregar el contenido completo del archivo
+            $arenas[] = $data;
         }
     }
-    
+
     // Ordenar por nombre
-    usort($arenas, function($a, $b) {
-        return strcmp($a['name'], $b['name']);
+    usort($arenas, function ($a, $b) {
+        return strcmp($a['name'] ?? '', $b['name'] ?? '');
     });
-    
+
     // Devolver respuesta
     http_response_code(200);
     echo json_encode($arenas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([

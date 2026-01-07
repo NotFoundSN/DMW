@@ -25,30 +25,16 @@ class DataService {
     }
 
     /**
-     * Obtener datos de una arena específica
-     * @param {string} arenaId - ID de la arena (ej: 'colo-hero')
-     */
-    async getArenaData(arenaId) {
-        return this.fetchData(`/arena/${arenaId}.json`);
-    }
-
-    /**
-     * Obtener datos de un dungeon específico
-     * @param {string} dungeonId - ID del dungeon (ej: 'vajiramon')
-     */
-    async getDungeonData(dungeonId) {
-        return this.fetchData(`/dungeon/${dungeonId}.json`);
-    }
-
-    /**
-     * Obtener lista de todas las arenas disponibles
+     * Obtener lista completa de todas las arenas con sus datos
+     * El PHP devuelve todo el contenido de los JSON en una sola respuesta
      */
     async getArenasList() {
         return this.fetchData('/arena/');
     }
 
     /**
-     * Obtener lista de todos los dungeons disponibles
+     * Obtener lista completa de todos los dungeons con sus datos
+     * El PHP devuelve todo el contenido de los JSON en una sola respuesta
      */
     async getDungeonsList() {
         return this.fetchData('/dungeon/');

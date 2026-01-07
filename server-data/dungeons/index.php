@@ -1,11 +1,11 @@
 <?php
 /**
- * API para listar dungeons disponibles
- * Escanea el directorio de dungeons y devuelve la lista en formato JSON
+ * API para listar dungeons disponibles con su contenido completo
+ * Escanea el directorio de dungeons y devuelve todos los datos en una sola respuesta
  */
 
 // Configuración CORS
-header('Access-Control-Allow-Origin: *'); // Cambia * por tu dominio específico si quieres más seguridad
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=utf-8');
@@ -37,19 +37,15 @@ try {
         $content = file_get_contents($file);
         $data = json_decode($content, true);
 
-        if ($data && isset($data['id']) && isset($data['name'])) {
-            $dungeons[] = [
-                'id' => $data['id'],
-                'name' => $data['name'],
-                'description' => $data['description'] ?? '',
-                'fileName' => $filename
-            ];
+        if ($data && isset($data['id'])) {
+            // Agregar el contenido completo del archivo
+            $dungeons[] = $data;
         }
     }
 
     // Ordenar por nombre
     usort($dungeons, function ($a, $b) {
-        return strcmp($a['name'], $b['name']);
+        return strcmp($a['name'] ?? '', $b['name'] ?? '');
     });
 
     // Devolver respuesta
