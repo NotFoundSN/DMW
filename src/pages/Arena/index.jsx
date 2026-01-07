@@ -1,13 +1,94 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { colosseumHeroData, generalNotes, bugs } from "../../const/arenaData";
+import dataService from "../../services/dataService";
 
 export default function Arena() {
 	const [currentFloor, setCurrentFloor] = useState(0);
 	const [selectedArena, setSelectedArena] = useState("colo-hero");
+	const [arenaData, setArenaData] = useState(null);
+	const [availableArenas, setAvailableArenas] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [useFallback, setUseFallback] = useState(false);
 
-	const arenaData = colosseumHeroData;
-	const totalFloors = arenaData.length;
-	const floorInfo = arenaData[currentFloor];
+	// Cargar lista de arenas disponibles desde PHP
+	useEffect(() => {
+		const loadArenasList = async () => {
+			const result = await dataService.getArenasList();
+
+			if (result.success) {
+				setAvailableArenas(result.data);
+			} else {
+				// Fallback: solo Colo Hero
+				console.warn("No se pudo cargar la lista de arenas, usando fallback");
+				setAvailableArenas([
+					{ id: "colo-hero", name: "Colo Hero", description: "Colosseum Hero" }
+				]);
+			}
+		};
+
+		loadArenasList();
+	}, []);
+
+	// Cargar datos de la arena
+	useEffect(() => {
+		const loadArenaData = async () => {
+			setLoading(true);
+			setError(null);
+
+			const result = await dataService.getArenaData(selectedArena);
+
+			if (result.success) {
+				setArenaData(result.data);
+				setUseFallback(false);
+			} else {
+				// Fallback a datos locales si falla la API
+				console.warn("Usando datos locales como fallback");
+				setArenaData({
+					floors: colosseumHeroData,
+					generalNotes: generalNotes,
+					bugs: bugs
+				});
+				setUseFallback(true);
+				setError("No se pudieron cargar los datos del servidor. Mostrando datos locales.");
+			}
+
+			setLoading(false);
+		};
+
+		loadArenaData();
+	}, [selectedArena]);
+
+	// Mostrar loading
+	if (loading) {
+		return (
+			<div className="w-full max-w-2xl mx-auto px-4 py-6 flex justify-center items-center min-h-screen">
+				<div className="bg-purple bg-opacity-95 rounded-lg p-8 shadow-2xl border-2 border-blue">
+					<div className="text-center">
+						<div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-light mx-auto mb-4"></div>
+						<p className="text-white text-xl font-bold">Cargando datos...</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Mostrar error crítico (solo si no hay fallback)
+	if (!arenaData) {
+		return (
+			<div className="w-full max-w-2xl mx-auto px-4 py-6 flex justify-center items-center min-h-screen">
+				<div className="bg-purple bg-opacity-95 rounded-lg p-8 shadow-2xl border-2 border-red-500">
+					<div className="text-center">
+						<p className="text-red-500 text-2xl font-bold mb-4">❌ Error</p>
+						<p className="text-white text-lg">No se pudieron cargar los datos de la arena.</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	const totalFloors = arenaData.floors.length;
+	const floorInfo = arenaData.floors[currentFloor];
 
 	// Mapeo de colores de atributos según el juego
 	const getAttributeStyle = (attribute) => {
@@ -78,7 +159,11 @@ export default function Arena() {
 					onChange={(e) => setSelectedArena(e.target.value)}
 					className="w-full bg-purple-light text-white font-bold text-lg p-3 rounded-md border-2 border-blue"
 				>
-					<option value="colo-hero">Colo Hero</option>
+					{availableArenas.map((arena) => (
+						<option key={arena.id} value={arena.id}>
+							{arena.name}
+						</option>
+					))}
 				</select>
 			</div>
 
@@ -171,7 +256,7 @@ export default function Arena() {
 						onChange={handleFloorSelect}
 						className="w-full bg-purple-light text-white font-bold text-lg p-2 rounded-md border-2 border-blue"
 					>
-						{arenaData.map((floor, index) => (
+						{arenaData.floors.map((floor, index) => (
 							<option key={index} value={index}>
 								Piso {floor.floor} - {floor.digimon}
 							</option>
@@ -185,7 +270,7 @@ export default function Arena() {
 				<h3 className="text-white font-bold text-xl mb-3 drop-shadow-text">
 					📝 Notas Generales
 				</h3>
-				{generalNotes.map((note, index) => (
+				{arenaData.generalNotes.map((note, index) => (
 					<div key={index} className="mb-2">
 						<span className="text-blue-light font-bold">{note.title}: </span>
 						<span className="text-white">{note.desc}</span>
@@ -198,7 +283,7 @@ export default function Arena() {
 				<h3 className="text-white font-bold text-xl mb-3 drop-shadow-text">
 					🐛 Bugs Conocidos
 				</h3>
-				{bugs.map((bug, index) => (
+				{arenaData.bugs.map((bug, index) => (
 					<div key={index} className="mb-2">
 						<span className="text-blue-light font-bold">{bug.title}: </span>
 						<span className="text-white">{bug.desc}</span>
