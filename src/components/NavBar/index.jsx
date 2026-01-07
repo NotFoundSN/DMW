@@ -7,7 +7,7 @@ export default function Layout() {
 		"text-white font-bold text-xl drop-shadow-text";
 	return (
 		<>
-			<div className=" flex flex-row bg-purple-light justify-evenly h-12 items-center z-50 shadow-2xl shadow-purple-light opacity-95 w-full">
+			<div className=" flex flex-row bg-blue justify-evenly h-12 items-center z-50 shadow-2xl shadow-blue opacity-95 w-full">
 				<NavLink
 					className={buttonClass}
 					to="/arena"
@@ -17,12 +17,17 @@ export default function Layout() {
 				<NavLink className={buttonClass} to="/clones">
 					<span className={spanClass}>Clones</span>
 				</NavLink>
-				<NavLink className={buttonClass} to="/trascender">
+				<NavLink className={buttonClass} to="/dungeons">
+					<span className={spanClass}>Dungeons</span>
+				</NavLink>
+				{/* Temporalmente oculto - futuro uso */}
+				{/* <NavLink className={buttonClass} to="/trascender">
 					<span className={spanClass}>Trascender</span>
-				</NavLink>
-				<NavLink className={buttonClass} to="/unite">
-					<span className={spanClass}>Unite</span>
-				</NavLink>
+				</NavLink> */}
+				{/* Temporalmente oculto - futuro backend */}
+				{/* <NavLink className={buttonClass} to="/login">
+					<span className={spanClass}>Login</span>
+				</NavLink> */}
 			</div>
 		</>
 	);

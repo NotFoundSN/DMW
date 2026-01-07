@@ -4,14 +4,19 @@ export default {
 	theme: {
 		colors: {
 			purple: {
-				DEFAULT: "#5F5DA6",
-				op: "rgba(95, 93, 166, 0.8)",
-				dark: "#4F4D8C",
-				darkOp: "rgba(79, 77, 140, 0.85)",
-				light: "#8F8EBF",
-				lightOp: "rgba(143, 142, 191, 0.6)",
-				blue: "#2E4159",
-				blueOp: "rgba(46, 65, 89, 0.829)",
+				DEFAULT: "#7C3AED",
+				op: "rgba(124, 58, 237, 0.8)",
+				dark: "#6B21A8",
+				darkOp: "rgba(107, 33, 168, 0.85)",
+				light: "#A78BFA",
+				lightOp: "rgba(167, 139, 250, 0.6)",
+				blue: "#0EA5E9",
+				blueOp: "rgba(14, 165, 233, 0.829)",
+			},
+			blue: {
+				DEFAULT: "#0EA5E9",
+				dark: "#0284C7",
+				light: "#38BDF8",
 			},
 			white: {
 				DEFAULT: "#f8f8ff",

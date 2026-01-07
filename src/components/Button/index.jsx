@@ -7,12 +7,13 @@ const normalButton = ({ name, ...otherProps }) => {
 };
 
 const otherButton = ({ name, ...otherProps }) => {
-	return <button>{name}</button>;
+	return <button {...otherProps}>{name}</button>;
 };
 
 const Input = ({ name, type = "normal", ...otherProps }) => {
 	const buttonList = {
 		normal: normalButton,
+		button: otherButton,
 		//number: text,
 		//: select,
 	};

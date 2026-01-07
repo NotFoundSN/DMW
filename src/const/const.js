@@ -12,6 +12,7 @@ const variable = {
         { 'piso': 29, 'digimons': ['NeoDevimon'] },
         { 'piso': 30, 'digimons': ['NeoDevimon'] }
     ],
+    api: "http://localhost:3000"
 }
 
 export default variable

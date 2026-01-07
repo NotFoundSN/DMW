@@ -110,7 +110,6 @@ export default function Clones() {
 					register={register}
 					validation={validation.text}
 					errors={errors}
-					
 				/>
 				<Input
 					type="text"
